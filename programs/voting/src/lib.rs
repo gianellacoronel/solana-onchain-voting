@@ -1,13 +1,4 @@
-pub mod constants;
-pub mod error;
-pub mod instructions;
-pub mod state;
-
 use anchor_lang::prelude::*;
-
-pub use constants::*;
-pub use instructions::*;
-pub use state::*;
 
 declare_id!("CAbqi9ipfV1mfukp67VX8KX8FSAzHwgznfxgEgT9Hy4E");
 
@@ -18,8 +9,15 @@ pub mod voting {
     pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
         crate::instructions::initialize::handle_initialize(ctx)
     }
+}
 
-    pub fn increment(ctx: Context<Increment>) -> Result<()> {
-        crate::instructions::increment::handle_increment(ctx)
-    }
+// Solana is stateless, we save accounts with its own data
+// Add a struct to represent a poll account
+#[account]
+#[derive(InitSpace)] //To calculate the size of the account for me
+pub struct PollAccount{
+    #[max_len(32)]
+    pub poll_name: String,
+    #[max_len(280)]
+    pub poll_description: String,
 }
