@@ -8,7 +8,7 @@ pub mod voting {
 
     // _poll_id -> We add underscore _ to remove warning for unused variable, because we need it there
     pub fn init_poll(ctx: Context<InitPoll>, _poll_id: u64, start: u64, end: u64, name: String, description: String) -> Result<()> {
-        let mut poll = ctx.accounts.poll_account;
+        let poll = & mut ctx.accounts.poll_account;
         poll.poll_name = name;
         poll.poll_description = description;
         poll.poll_voting_start = start;
@@ -16,6 +16,14 @@ pub mod voting {
 
         Ok(())
     }
+
+    pub fn initialize_candidate(ctx: Context<InitializeCandidate>,
+        _poll_id: u64,
+        candidate: String) -> Result<()>{
+            ctx.accounts.candidate_account.candidate_name = candidate;
+            ctx.accounts.poll_account.poll_option_index += 1;
+            Ok(())
+        }
 }
 #[derive(Accounts)]
 #[instruction(poll_id: u64)]
