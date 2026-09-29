@@ -22,4 +22,5 @@ pub struct PollAccount{
     pub poll_description: String,
     pub poll_voting_start: u64, // date represented as Unix timestamp
     pub poll_voting_end: u64,
+    pub poll_option_index: u64
 }
