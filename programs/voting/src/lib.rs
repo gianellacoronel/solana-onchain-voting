@@ -18,15 +18,32 @@ pub mod voting {
     }
 
     pub fn initialize_candidate(ctx: Context<InitializeCandidate>,
-        _poll_id: u64,
-        candidate: String) -> Result<()>{
-            ctx.accounts.candidate_account.candidate_name = candidate;
-            ctx.accounts.poll_account.poll_option_index += 1;
-            Ok(())
+                                _poll_id: u64,
+                                candidate: String) -> Result<()>{
+        ctx.accounts.candidate_account.candidate_name = candidate;
+        ctx.accounts.poll_account.poll_option_index += 1;
+        Ok(())
+    }
+
+    pub fn vote(ctx: Context<Vote>, _poll_id: u64, _candidate: String) -> Result<()>{
+        let candidate = &mut ctx.accounts.candidate_account;
+
+        let current_time = Clock::get()?.unix_timestamp;
+
+        if current_time > (ctx.accounts.poll_account.poll_voting_end as i64) {
+            return Err(ErrorCode::VotingEnded.into());
         }
+        if current_time <= (ctx.accounts.poll_account.poll_voting_start as i64) {
+            return Err(ErrorCode::VotingNotStarted.into());
+        }
+
+        candidate.candidate_votes += 1;
+
+        Ok(())
+    }
 }
 #[derive(Accounts)]
-#[instruction(poll_id: u64)]
+#[instruction(poll_id: u64, candidate: String)]
 pub struct InitPoll{
     #[account(mut)]
     pub signer: Signer<'info>
@@ -46,11 +63,11 @@ pub struct InitPoll{
 #[instruction(poll_id: u64)]
 pub struct InitializeCandidate{
     #[account(mut)]
-    pub signer: Signer<'info>
+    pub signer: Signer<'info>,
 
     #[account(
         mut,
-        seeds = [b"poll".as_ref(), poll_id.to_le_bytes().as_ref()]
+        seeds = [b"poll".as_ref(), poll_id.to_le_bytes().as_ref()],
         bump
     )]
     pub poll_account: Account<'info, PollAccount>,
@@ -66,6 +83,28 @@ pub struct InitializeCandidate{
 
     pub system_program: Program<'info, System>,
 }
+
+#[derive(Accounts)]
+#[instruction(poll_id: u64)]
+pub struct Vote<'info>{
+    #[account(mut)]
+    pub signer: Signer<'info>,
+
+    #[account(
+        mut,
+        seeds = [b"poll".as_ref(), poll_id.to_le_bytes().as_ref()],
+        bump
+    )]
+    pub poll_account: Account<'info, PollAccount>,
+
+    #[account(
+        mut,
+        seeds = [poll_id.to_le_bytes().as_ref(), candidate.as_ref()],
+        bump
+    )]
+    pub candidate_account: Account<'info, CandidateAccount>,
+}
+
 
 
 
@@ -90,4 +129,12 @@ pub struct CandidateAccount {
     #[max_len(32)]
     pub candidate_name: String,
     pub candidate_votes: u64,
+}
+
+#[error_code]
+pub enum ErrorCode {
+    #[msg("Voting has not stated yet")]
+    VotingNotStarted,
+    #[msg("Voting has ended")]
+    VotingEnded,
 }
