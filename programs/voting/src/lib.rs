@@ -20,4 +20,6 @@ pub struct PollAccount{
     pub poll_name: String,
     #[max_len(280)]
     pub poll_description: String,
+    pub poll_voting_start: u64, // date represented as Unix timestamp
+    pub poll_voting_end: u64,
 }
