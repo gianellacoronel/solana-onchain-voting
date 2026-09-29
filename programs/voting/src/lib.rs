@@ -43,10 +43,11 @@ pub mod voting {
     }
 }
 #[derive(Accounts)]
-#[instruction(poll_id: u64, candidate: String)]
-pub struct InitPoll{
+#[instruction(poll_id: u64)]
+pub struct InitPoll<'info>{
     #[account(mut)]
-    pub signer: Signer<'info>
+    pub signer: Signer<'info>,
+
     #[account(
         init,
         payer = signer,
@@ -60,8 +61,8 @@ pub struct InitPoll{
 }
 
 #[derive(Accounts)]
-#[instruction(poll_id: u64)]
-pub struct InitializeCandidate{
+#[instruction(poll_id: u64, candidate: String)]
+pub struct InitializeCandidate<'info>{
     #[account(mut)]
     pub signer: Signer<'info>,
 
@@ -85,7 +86,7 @@ pub struct InitializeCandidate{
 }
 
 #[derive(Accounts)]
-#[instruction(poll_id: u64)]
+#[instruction(poll_id: u64, candidate: String)]
 pub struct Vote<'info>{
     #[account(mut)]
     pub signer: Signer<'info>,
