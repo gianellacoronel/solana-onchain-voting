@@ -6,9 +6,31 @@ declare_id!("CAbqi9ipfV1mfukp67VX8KX8FSAzHwgznfxgEgT9Hy4E");
 pub mod voting {
     use super::*;
 
-    pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
-        crate::instructions::initialize::handle_initialize(ctx)
+    pub fn init_poll(ctx: Context<InitPoll>, _poll_id: u64, start: u64, end: u64, name: String, description: String) -> Result<()> {
+        let mut poll = ctx.accounts.poll_account;
+        poll.poll_name = name;
+        poll.poll_description = description;
+        poll.poll_voting_start = start;
+        poll.poll_voting_end = end;
+
+        Ok(())
     }
+}
+#[derive(Accounts)]
+#[instruction(poll_id: u64)]
+pub struct InitPoll{
+    #[account(mut)]
+    pub signer: Signer<'info>
+    #[account(
+        init,
+        payer = signer,
+        space = 8 + PollAccount::INIT_SPACE,
+        seeds = [b"poll".as_ref(), poll_id.to_le_bytes().as_ref()],
+        bump
+    )]
+    pub poll_account: Account<'info, PollAccount>,
+
+    pub system_program: Program<'info, System>,
 }
 
 // Solana is stateless, we save accounts with its own data
